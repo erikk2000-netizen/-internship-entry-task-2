@@ -6,7 +6,8 @@
 
 База данных MySQL создается автоматически при первой сборке контейнера. Но может не создаться, например, если том для хранилища МуSQL уже не пустой. В таком случае необходимо в МуSQL выполнить запросы из файла init.sql. Это можно сделать, используя PhpMyAdmin по ссылке http://<Virtual Machine IP>:8088 (root/rootpassword)
 
-Тестировался из браузера FireFox (Dev Tools, Network Tab, Edit and Resend request form)
+Тестировался из браузера FireFox (Dev Tools, Network Tab, Edit and Resend request form).
+
 План тестирования.
 
 1. Сделать запрос [GET http://<Virtual Machine IP>:8080/health]. Убедиться, что ответ приходит с HTTP статус-кодом 200.
