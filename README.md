@@ -2,7 +2,7 @@
 Игрушечный сервис, имитирующий прохождение платежей. Использует Python (sqlalchemy, asyncio, multiprocessing) и MySQL DB.
 
 Команда для запуска: docker compose up --build
-Тестировался на виртуальной машине Linux, созданной из стандартного образа https://releases.ubuntu.com/noble/ubuntu-24.04.4-live-server-amd64.iso, с параметрами по умолчанию, с 8ГБ RAM и 50GB HDD.
+Тестировался на виртуальной машине Linux, созданной из стандартного образа https://releases.ubuntu.com/noble/ubuntu-24.04.4-live-server-amd64.iso, с параметрами по умолчанию, с 8GB RAM и 50GB HDD.
 
 База данных MySQL создается автоматически при первой сборке контейнера. Но может не создаться, например, если том для хранилища МуSQL уже не пустой. В таком случае необходимо в МуSQL выполнить запросы из файла init.sql. Это можно сделать, используя PhpMyAdmin по ссылке http://<Virtual Machine IP>:8088 (root/rootpassword)
 
