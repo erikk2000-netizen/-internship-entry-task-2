@@ -1,0 +1,20 @@
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://user:password@db:3306/candidate_data")
+PROVIDER_PAYMENTS_URL = os.getenv("PROVIDER_URL", "http://provider-simulator:8081") + '/payments'
+
+STATUS_CREATED = 0
+STATUS_PROCESSING = 1
+STATUS_COMPLETED = 2
+STATUS_REJECTED = 3
+
+BACKOFF_LIMIT = 5
+BACKOFF_SECONDS = 5.5
+BACKOFF_JITTER_SECONDS = 4.5
+
+operation_statuses = {
+    STATUS_CREATED: 'CREATED',
+    STATUS_PROCESSING: 'PROCESSING',
+    STATUS_COMPLETED: 'COMPLETED',
+    STATUS_REJECTED: 'REJECTED'
+}
