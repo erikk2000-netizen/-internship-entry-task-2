@@ -13,6 +13,12 @@ services:
         volumes:
             - ./init.sql:/docker-entrypoint-initdb.d/init.sql
             - candidate-data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "--password=password"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+            start_period: 30s
 
     phpmyadmin:
         image: phpmyadmin:latest
@@ -34,7 +40,15 @@ services:
         ports:
             - "8080:8080"
         depends_on:
-            - db
+            db:
+                condition: service_healthy
+        healthcheck:
+            # Используем встроенный модуль urllib для HTTP-запроса
+            test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+            interval: 555s
+            timeout: 3s
+            retries: 5
+            start_period: 40s # Даем время на подключение к БД и старт
 
     provider-simulator:
         image: ghcr.io/fintech-dev-lab/internship-provider-simulator:v0.2.0
@@ -44,6 +58,17 @@ services:
             - "8081:8081"
         depends_on:
             - candidate-service
+
+    test_concurrent_requests:
+        build: .
+        environment:
+            OPERATION_COUNT: 0
+            BASE_URL: http://candidate-service:8080
+            DATABASE_URL: mysql+pymysql://user:password@db:3306/candidate_data
+        depends_on:
+            candidate-service:
+                condition: service_healthy
+        command: pytest test_concurrent_requests.py
 
 volumes:
     candidate-data:
