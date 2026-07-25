@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS receipts (
 	operationId CHAR(36) NOT NULL,
 	receiptResult CHAR(30) NOT NULL,
 	message TEXT NULL,
-	rawOccurredAt CHAR(23),
+	rawOccurredAt CHAR(43),
 	occurredAt INT NULL DEFAULT NULL,
 	isIgnored TINYINT NOT NULL DEFAULT 0,
 	INDEX occurredAt (occurredAt),
