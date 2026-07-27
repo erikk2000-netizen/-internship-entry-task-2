@@ -5,9 +5,7 @@ from sqlalchemy import text
 
 from database import engine
 
-# Берем адрес из переменных окружения.
-# Если переменной нет (например, тесты запускают локально без Docker),
-# используем запасной вариант для локальной разработки.
+
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8080")
 OPERATION_COUNT = os.getenv("OPERATION_COUNT", "0")
 

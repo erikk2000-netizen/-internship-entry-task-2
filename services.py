@@ -1,13 +1,12 @@
 import json
 import time
 import random
+import datetime
 import requests
 from sqlalchemy import text, exc
-from datetime import datetime, timezone
 from fastapi import Request, Response, status
 
 from database import engine
-from schemas import OperationCreate
 from config import PROVIDER_PAYMENTS_URL, STATUS_CREATED, STATUS_PROCESSING, STATUS_COMPLETED, STATUS_REJECTED, BACKOFF_LIMIT, BACKOFF_SECONDS, BACKOFF_JITTER_SECONDS, operation_statuses
 
 def operation_submit_service(operation_id: str):
@@ -148,7 +147,7 @@ def get_operation_events_data(id: str):
             'fromStatus': format_status(row.fromStatus),
             'toStatus': format_status(row.toStatus),
             'message': row.message,
-            'occurredAt': datetime.fromtimestamp(row.occurredAt, tz=timezone.utc).isoformat().replace('+00:00', 'Z')
+            'occurredAt': datetime.datetime.fromtimestamp(row.occurredAt, tz=datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
         }
 
         output.append(data_dict)
@@ -170,9 +169,8 @@ def format_amount(amount):
     return f"{amount:.2f}"
 
 
-def create_operation_service(operation_data: OperationCreate):
+def create_operation_service(data_dict: dict):
     try:
-        data_dict = operation_data.model_dump()
         query = text("INSERT INTO operations (operationId, amount, currency, description) VALUES (:operationId, :amount, :currency, :description)")
 
         with engine.begin() as connection:
@@ -286,7 +284,7 @@ def finalize_operation_service(receipt_data: dict[str, str]):
 
         if isinstance(receipt_data['occurredAt'], str):
             try:
-                receipt_dict['occurredAt'] = int(datetime.fromisoformat(receipt_data['occurredAt'].replace('Z', '+00:00')).timestamp())
+                receipt_dict['occurredAt'] = int(datetime.datetime.fromisoformat(receipt_data['occurredAt'].replace('Z', '+00:00')).timestamp())
             except Exception as e:
                 pass
 
@@ -314,3 +312,46 @@ def finalize_operation_service(receipt_data: dict[str, str]):
                 return Response(status_code=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return {"status": "error", "detail": str(e)}
+
+
+def basic_metrics_service(from_timestamp: int, to_timestamp: int):
+    query = text(f"SELECT o.status, COUNT(o.operationId) AS cnt, SUM(o.amount) AS total FROM events e LEFT JOIN operations o ON o.operationId = e.operationId WHERE e.toStatus = {STATUS_PROCESSING} AND e.occurredAt BETWEEN {from_timestamp} AND {to_timestamp} GROUP BY o.status")
+
+    try:
+        with engine.begin() as connection:
+            result = connection.execute(query)
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+    result_dict = {row["status"]: dict(row) for row in result.mappings()}
+
+    if len(result_dict) == 0:
+        return {
+            'Approval Rate': 'N/A',
+            'Rejection Rate': 'N/A',
+            'Total Processed Volume (TPV)': '0.00 RUB',
+            'Lost Revenue': '0.00 RUB',
+            'Average Transaction Value (ATV)': 'N/A'
+        }
+
+    processing_cnt = result_dict[STATUS_PROCESSING]['cnt'] if STATUS_PROCESSING in result_dict else 0
+    completed_cnt = result_dict[STATUS_COMPLETED]['cnt'] if STATUS_COMPLETED in result_dict else 0
+    rejected_cnt = result_dict[STATUS_REJECTED]['cnt'] if STATUS_REJECTED in result_dict else 0
+    total_cnt = processing_cnt + completed_cnt + rejected_cnt
+    tpv = result_dict[STATUS_COMPLETED]['total'] if STATUS_COMPLETED in result_dict else 0
+    lost_revenue = result_dict[STATUS_REJECTED]['total'] if STATUS_REJECTED in result_dict else 0
+    atv = tpv / total_cnt
+
+    return {
+        'Approval Rate': f"{(completed_cnt / total_cnt * 100):.1f}" + '%',
+        'Rejection Rate': f"{(rejected_cnt / total_cnt * 100):.1f}" + '%',
+        'Total Processed Volume (TPV)': f"{tpv:.2f}" + ' RUB',
+        'Lost Revenue': f"{lost_revenue:.2f}" + ' RUB',
+        'Average Transaction Value (ATV)': f"{atv:.2f}" + ' RUB',
+    }
+
+
+def date_to_timestamp(the_date):
+    dt_utc = datetime.datetime.combine(the_date, datetime.time.min, tzinfo=datetime.timezone.utc)
+
+    return int(dt_utc.timestamp())

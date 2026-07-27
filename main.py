@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request, status
 from database import engine
 from worker import background_process_entry
 from config import STATUS_PROCESSING
-from routers import operations, receipts, health
+from routers import operations, receipts, health, metrics
 
 # 2. Управление жизненным циклом FastAPI (Lifespan)
 # Словарь для хранения глобального состояния (очереди)
@@ -52,6 +52,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(health.router)
 app.include_router(operations.router)
 app.include_router(receipts.router)
+app.include_router(metrics.router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

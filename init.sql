@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS events (
 	toStatus TINYINT NOT NULL,
 	occurredAt INT NOT NULL,
 	message TEXT NULL DEFAULT NULL,
-	INDEX operationId (operationId)
+	INDEX operationId (operationId),
+	INDEX occurredAt (occurredAt)
 );
 
 CREATE TABLE IF NOT EXISTS submits (
