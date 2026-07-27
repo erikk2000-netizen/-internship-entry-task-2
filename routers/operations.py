@@ -7,7 +7,7 @@ router = APIRouter(prefix="/operations", tags=["Operations"])
 
 @router.post("")
 def create_operation(operation_data: OperationCreate):
-    return create_operation_service(operation_data)
+    return create_operation_service(operation_data.model_dump())
 
 
 @router.post("/{id}/submit")
