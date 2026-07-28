@@ -29,7 +29,7 @@ def test_concurrent():
     container_id = 'test'
 
     with engine.begin() as connection:
-        row = connection.execute(text(f"SELECT operationId FROM operations WHERE operationId LIKE '%-{container_id}' ORDER BY operationId DESC LIMIT 0,1")).mappings().one_or_none()
+        row = connection.execute(text(f"SELECT operationId FROM operations WHERE operationId LIKE '%-{container_id}' ORDER BY CAST(operationId AS UNSIGNED) DESC LIMIT 0,1")).mappings().one_or_none()
 
     if row is None:
         start_id = 1
