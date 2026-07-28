@@ -29,7 +29,11 @@
 Например GET http://<Virtual Machine IP>:8080/metrics/basic?start=2026-01-01&end=2026-11-02 возвращает JSON c данными вида:
 
 Approval Rate	"99.8%"
+
 Rejection Rate	"0.0%"
+
 Total Processed Volume (TPV)	"13312.11 RUB"
+
 Lost Revenue	"0.00 RUB"
+
 Average Transaction Value (ATV)	"11.73 RUB"
